@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gia Phả Họ Viễn Trình</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f4f6f9; }
+    h1 { color: #8b0000; text-align: center; }
+    .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+    label { font-weight: bold; display: block; margin-top: 8px; }
+    input, textarea, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
+    button { background: #8b0000; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    button:hover { background: #a00000; }
+    ul { list-style: none; padding: 0; }
+    li { background: white; padding: 10px; margin-bottom: 8px; border-radius: 5px; border-left: 4px solid #8b0000; }
+  </style>
+</head>
+<body>
+
+  <h1>Gia Phả Họ Viễn Trình</h1>
+
+  <!-- Form gửi yêu cầu cập nhật dành cho thành viên -->
+  <div class="card">
+    <h3>Gửi yêu cầu cập nhật / bổ sung thông tin</h3>
+    <label for="fullName">Họ và tên thành viên:</label>
+    <input type="text" id="fullName" placeholder="Ví dụ: Nguyễn Văn A">
+
+    <label for="details">Nội dung cần thêm / chỉnh sửa:</label>
+    <textarea id="details" rows="3" placeholder="Nhập chi tiết thông tin đời, ngày sinh, mối quan hệ..."></textarea>
+
+    <button onclick="submitUpdate()">Gửi yêu cầu cho Admin</button>
+  </div>
+
+  <!-- Danh sách thông báo -->
+  <div class="card">
+    <h3>Thông báo từ Ban quản trị</h3>
+    <ul id="announcementList">
+      <li>Đang tải dữ liệu gia phả...</li>
+    </ul>
+  </div>
+
+  <!-- Firebase App & Database SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // Cấu hình Firebase của gia phả
+    const firebaseConfig = {
+      apiKey: "AIzaSyD3uX2gVg0j9cwjpVxVWjYoZT3ut-BXTWQ",
+      authDomain: "giaphahovientrinh.firebaseapp.com",
+      databaseURL: "https://giaphahovientrinh-default-rtdb.firebaseio.com",
+      projectId: "giaphahovientrinh",
+      storageBucket: "giaphahovientrinh.firebasestorage.app",
+      messagingSenderId: "215728343120",
+      appId: "1:215728343120:web:12c3a5d4f4eb875aaa2955"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Hàm gửi yêu cầu cập nhật
+    window.submitUpdate = function() {
+      const name = document.getElementById("fullName").value.trim();
+      const info = document.getElementById("details").value.trim();
+
+      if (!name || !info) {
+alert("Vui lòng điền đầy đủ họ tên và nội dung cần cập nhật!");
+        return;
+      }
+
+      push(ref(db, 'requests'), {
+        name: name,
+        info: info,
+        timestamp: new Date().toLocaleString("vi-VN")
+      }).then(() => {
+        alert("Yêu cầu của bạn đã được gửi thành công đến Ban Quản Trị!");
+        document.getElementById("fullName").value = "";
+        document.getElementById("details").value = "";
+      }).catch((err) => {
+        alert("Lỗi khi gửi yêu cầu: " + err.message);
+      });
+    };
+
+    // Tải thông báo thực tế từ Firebase
+    const annRef = ref(db, 'announcements');
+    onValue(annRef, (snapshot) => {
+      const list = document.getElementById("announcementList");
+      list.innerHTML = "";
+      const data = snapshot.val();
+      if (data) {
+        Object.values(data).forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          list.appendChild(li);
+        });
+      } else {
+        list.innerHTML = "<li>Chào mừng bà con dòng họ Viễn Trình đến với website gia phả!</li>";
+      }
+    });
+  </script>
+</body>
+</html>
